@@ -1,81 +1,62 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource
-from datetime import datetime, timedelta
-import uuid
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gs_emulator.db'
+db = SQLAlchemy(app)
 api = Api(app)
 
-# Sample data to simulate satellites and ground stations
-satellites = [
-    {"satelliteId": "sat-1", "noradId": "12345", "name": "Satellite 1"},
-    {"satelliteId": "sat-2", "noradId": "67890", "name": "Satellite 2"}
-]
+# Models
+class Satellite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    satellite_id = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100))
+    telemetry_payload = db.Column(db.JSON)
 
-ground_stations = [
-    {"groundStationId": "gs-1", "name": "Ground Station 1"},
-    {"groundStationId": "gs-2", "name": "Ground Station 2"}
-]
+class GroundStation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ground_station_id = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100))
 
-# Dictionary to store scheduled contacts
-contacts = {}
+db.create_all()
 
-class ListSatellites(Resource):
-    def get(self):
-        return jsonify({"satellites": satellites})
+# Example API Resource
+class SatelliteAPI(Resource):
+    def get(self, satellite_id=None):
+        if satellite_id:
+            satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
+            if not satellite:
+                return {"error": "Satellite not found"}, 404
+            return {"id": satellite.id, "satellite_id": satellite.satellite_id, "name": satellite.name, "telemetry_payload": satellite.telemetry_payload}
+        satellites = Satellite.query.all()
+        return [{"satellite_id": s.satellite_id, "name": s.name} for s in satellites]
 
-class ListGroundStations(Resource):
-    def get(self):
-        return jsonify({"groundStations": ground_stations})
-
-class ScheduleContact(Resource):
     def post(self):
-        data = request.get_json()
-        satellite_id = data.get("satelliteId")
-        ground_station_id = data.get("groundStationId")
-        start_time = data.get("startTime")
-        end_time = data.get("endTime")
+        data = request.json
+        satellite = Satellite(satellite_id=data['satellite_id'], name=data['name'], telemetry_payload={})
+        db.session.add(satellite)
+        db.session.commit()
+        return {"message": "Satellite created"}, 201
 
-        # Validate satellite and ground station IDs
-        if not any(sat['satelliteId'] == satellite_id for sat in satellites):
-            return jsonify({"error": "Invalid satellite ID"}), 400
-        if not any(gs['groundStationId'] == ground_station_id for gs in ground_stations):
-            return jsonify({"error": "Invalid ground station ID"}), 400
+    def put(self, satellite_id):
+        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
+        if not satellite:
+            return {"error": "Satellite not found"}, 404
+        satellite.name = request.json.get('name', satellite.name)
+        satellite.telemetry_payload = request.json.get('telemetry_payload', satellite.telemetry_payload)
+        db.session.commit()
+        return {"message": "Satellite updated"}, 200
 
-        # Generate a unique contact ID
-        contact_id = str(uuid.uuid4())
-        
-        # Store the contact in the contacts dictionary
-        contacts[contact_id] = {
-            "contactId": contact_id,
-            "satelliteId": satellite_id,
-            "groundStationId": ground_station_id,
-            "startTime": start_time,
-            "endTime": end_time,
-            "status": "SCHEDULED"
-        }
-        return jsonify({"contactId": contact_id})
+    def delete(self, satellite_id):
+        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
+        if not satellite:
+            return {"error": "Satellite not found"}, 404
+        db.session.delete(satellite)
+        db.session.commit()
+        return {"message": "Satellite deleted"}, 200
 
-class GetContactStatus(Resource):
-    def get(self, contact_id):
-        contact = contacts.get(contact_id)
-        if not contact:
-            return jsonify({"error": "Contact not found"}), 404
+api.add_resource(SatelliteAPI, '/satellites', '/satellites/<string:satellite_id>')
 
-        # Simulate contact status update based on time
-        now = datetime.utcnow().isoformat() + "Z"
-        if now >= contact["startTime"] and now < contact["endTime"]:
-            contact["status"] = "IN_PROGRESS"
-        elif now >= contact["endTime"]:
-            contact["status"] = "COMPLETED"
-        
-        return jsonify(contact)
-
-# Adding routes
-api.add_resource(ListSatellites, "/satellites")
-api.add_resource(ListGroundStations, "/groundstations")
-api.add_resource(ScheduleContact, "/schedulecontact")
-api.add_resource(GetContactStatus, "/contactstatus/<string:contact_id>")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
