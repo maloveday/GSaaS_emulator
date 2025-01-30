@@ -4,6 +4,7 @@ from flask_restful import Api, Resource
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gs_emulator.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 api = Api(app)
 
@@ -19,7 +20,9 @@ class GroundStation(db.Model):
     ground_station_id = db.Column(db.String(50), unique=True, nullable=False)
     name = db.Column(db.String(100))
 
-db.create_all()
+# ✅ Ensure `db.create_all()` runs within the Flask app context
+with app.app_context():
+    db.create_all()
 
 # Example API Resource
 class SatelliteAPI(Resource):
