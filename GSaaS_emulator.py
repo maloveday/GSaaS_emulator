@@ -37,10 +37,22 @@ class SatelliteAPI(Resource):
 
     def post(self):
         data = request.json
-        satellite = Satellite(satellite_id=data['satellite_id'], name=data['name'], telemetry_payload={})
-        db.session.add(satellite)
-        db.session.commit()
-        return {"message": "Satellite created"}, 201
+        if not data.get('satellite_id') or not data.get('name'):
+            return {"error": "Satellite ID and Name are required"}, 400  # Validation
+
+        satellite = Satellite(
+            satellite_id=data['satellite_id'], 
+            name=data['name'], 
+            telemetry_payload={}
+        )
+
+        try:
+            db.session.add(satellite)
+            db.session.commit()  # ✅ Ensure data is saved
+            return {"message": "Satellite created successfully"}, 201
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of failure
+            return {"error": str(e)}, 500
 
     def put(self, satellite_id):
         satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
