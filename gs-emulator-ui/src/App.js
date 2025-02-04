@@ -30,9 +30,16 @@ function App() {
       alert("Satellite ID and Name are required!");
       return;
     }
+
     try {
-      await axios.post(`${API_BASE_URL}/satellites`, newSatellite);
-      fetchSatellites();
+      const response = await axios.post(`${API_BASE_URL}/satellites`, newSatellite, {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          }
+      });
+      console.log("Server response:", response.data);
+      fetchSatellites(); // Refresh list after adding
       setNewSatellite({ satellite_id: "", name: "" });
     } catch (error) {
       console.error("Error creating satellite:", error);
