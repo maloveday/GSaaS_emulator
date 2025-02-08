@@ -56,16 +56,31 @@ function App() {
   };
 
   const updateTelemetry = async () => {
+    if (!selectedSatellite) {
+        alert("No satellite selected!");
+        return;
+    }
+
     try {
-      await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
-        telemetry_payload: JSON.parse(telemetryPayload),
-      });
-      fetchSatellites();
-      alert("Telemetry updated successfully!");
+        const response = await axios.put(
+            `${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`,
+            { telemetry_payload: JSON.parse(telemetryPayload) }, // Ensure valid JSON
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                }
+            }
+        );
+
+        console.log("Telemetry update response:", response.data);
+        fetchSatellites();  // Refresh list after updating
+        alert("Telemetry updated successfully!");
     } catch (error) {
-      console.error("Error updating telemetry:", error);
+        console.error("Error updating telemetry:", error);
     }
   };
+
 
   return (
     <div className="container mt-4">

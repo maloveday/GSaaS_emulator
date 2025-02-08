@@ -26,9 +26,13 @@ class SatelliteAPI(Resource):
             satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
             if not satellite:
                 return {"error": "Satellite not found"}, 404
-            return {"id": satellite.id, "satellite_id": satellite.satellite_id, "name": satellite.name, "telemetry_payload": satellite.telemetry_payload}
+            return {
+                "satellite_id": satellite.satellite_id, 
+                "name": satellite.name, 
+                "telemetry_payload": satellite.telemetry_payload
+            }
         satellites = Satellite.query.all()
-        return [{"satellite_id": s.satellite_id, "name": s.name} for s in satellites]
+        return [{"satellite_id": s.satellite_id, "name": s.name, "telemetry_payload": s.telemetry_payload} for s in satellites]
 
     def post(self):
         data = request.json  # Ensure JSON request is being read
@@ -40,6 +44,7 @@ class SatelliteAPI(Resource):
             name=data['name'],
             telemetry_payload={}
         )
+        
         try:
             db.session.add(satellite)
             db.session.commit()
@@ -47,8 +52,22 @@ class SatelliteAPI(Resource):
         except Exception as e:
             db.session.rollback()
             return {"error": str(e)}, 500
+        
+    def put(self, satellite_id):
+        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
+        if not satellite:
+            return {"error": "Satellite not found"}, 404
 
-api.add_resource(SatelliteAPI, '/satellites')
+        try:
+            data = request.json
+            satellite.telemetry_payload = data.get("telemetry_payload", satellite.telemetry_payload)
+            db.session.commit()
+            return {"message": "Telemetry updated successfully"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}, 500
+
+api.add_resource(SatelliteAPI, '/satellites', '/satellites/<string:satellite_id>')
 
 if __name__ == '__main__':
     app.run(debug=True)
