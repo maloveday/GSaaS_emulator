@@ -47,11 +47,23 @@ function App() {
   };
 
   const deleteSatellite = async (satellite_id) => {
+    if (!window.confirm(`Are you sure you want to delete ${satellite_id}?`)) {
+        return;
+    }
+
     try {
-      await axios.delete(`${API_BASE_URL}/satellites/${satellite_id}`);
-      fetchSatellites();
+        const response = await axios.delete(`${API_BASE_URL}/satellites/${satellite_id}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            }
+        });
+
+        console.log("Delete response:", response.data);
+        fetchSatellites();  // Refresh list after deleting
+        alert("Satellite deleted successfully!");
     } catch (error) {
-      console.error("Error deleting satellite:", error);
+        console.error("Error deleting satellite:", error);
     }
   };
 
@@ -80,7 +92,6 @@ function App() {
         console.error("Error updating telemetry:", error);
     }
   };
-
 
   return (
     <div className="container mt-4">

@@ -66,6 +66,19 @@ class SatelliteAPI(Resource):
         except Exception as e:
             db.session.rollback()
             return {"error": str(e)}, 500
+        
+    def delete(self, satellite_id):
+        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
+        if not satellite:
+            return {"error": "Satellite not found"}, 404
+
+        try:
+            db.session.delete(satellite)
+            db.session.commit()
+            return {"message": "Satellite deleted successfully"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}, 500
 
 api.add_resource(SatelliteAPI, '/satellites', '/satellites/<string:satellite_id>')
 
