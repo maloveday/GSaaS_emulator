@@ -73,10 +73,20 @@ function App() {
         return;
     }
 
+    let parsedTelemetry;
+    try {
+        // Try to parse the JSON
+        parsedTelemetry = JSON.parse(telemetryPayload);
+    } catch (error) {
+        alert("Invalid JSON format! Please correct the JSON before updating.");
+        console.error("Invalid JSON:", error);
+        return; // Stop execution if JSON is invalid
+    }
+
     try {
         const response = await axios.put(
             `${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`,
-            { telemetry_payload: JSON.parse(telemetryPayload) }, // Ensure valid JSON
+            { telemetry_payload: parsedTelemetry },  // Send parsed JSON
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -90,8 +100,9 @@ function App() {
         alert("Telemetry updated successfully!");
     } catch (error) {
         console.error("Error updating telemetry:", error);
+        alert("Failed to update telemetry. Please try again.");
     }
-  };
+};
 
   return (
     <div className="container mt-4">
