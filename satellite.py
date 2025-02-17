@@ -1,8 +1,6 @@
 from flask import request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource
-
-db = SQLAlchemy()
+from database import db  # ✅ Import db from database.py
 
 class Satellite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -19,46 +17,12 @@ class SatelliteAPI(Resource):
             return {
                 "satellite_id": satellite.satellite_id,
                 "name": satellite.name,
-                "telemetry_payload": satellite.telemetry_payload  # ✅ Ensure telemetry is returned
+                "telemetry_payload": satellite.telemetry_payload
             }
         return [
             {
                 "satellite_id": s.satellite_id,
                 "name": s.name,
-                "telemetry_payload": s.telemetry_payload  # ✅ Ensure list includes telemetry data
+                "telemetry_payload": s.telemetry_payload
             } for s in Satellite.query.all()
         ]
-        
-    def post(self):
-        data = request.json
-        if not data.get("satellite_id") or not data.get("name"):
-            return {"error": "Satellite ID and Name are required"}, 400
-
-        satellite = Satellite(
-            satellite_id=data["satellite_id"],
-            name=data["name"],
-            telemetry_payload={}
-        )
-        db.session.add(satellite)
-        db.session.commit()
-        return {"message": "Satellite created"}, 201
-
-    def put(self, satellite_id):
-        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
-        if not satellite:
-            return {"error": "Satellite not found"}, 404
-
-        data = request.json
-        satellite.name = data.get("name", satellite.name)
-        satellite.telemetry_payload = data.get("telemetry_payload", satellite.telemetry_payload)
-        db.session.commit()
-        return {"message": "Satellite updated"}, 200
-
-    def delete(self, satellite_id):
-        satellite = Satellite.query.filter_by(satellite_id=satellite_id).first()
-        if not satellite:
-            return {"error": "Satellite not found"}, 404
-
-        db.session.delete(satellite)
-        db.session.commit()
-        return {"message": "Satellite deleted"}, 200
