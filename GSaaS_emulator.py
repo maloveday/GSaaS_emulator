@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
-from database import db  # ✅ Import db from database.py
+from database import db  # ✅ Import the shared database instance
 
 app = Flask(__name__)
 CORS(app)
@@ -18,7 +18,7 @@ from groundstation import GroundStationAPI
 
 api = Api(app)
 
-# ✅ Ensure the POST endpoint is correctly registered
+# ✅ Ensure GET, POST, PUT, DELETE are registered correctly
 api.add_resource(SatelliteAPI, "/satellites", "/satellites/<string:satellite_id>")
 api.add_resource(GroundStationAPI, "/groundstations", "/groundstations/<string:ground_station_id>")
 

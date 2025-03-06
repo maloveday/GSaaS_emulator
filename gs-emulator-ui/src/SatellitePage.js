@@ -7,6 +7,7 @@ const API_BASE_URL = "http://localhost:5000";
 
 function SatellitePage() {
     const [satellites, setSatellites] = useState([]);
+    const [newSatellite, setNewSatellite] = useState({ satellite_id: "", name: "" });
     const [selectedSatellite, setSelectedSatellite] = useState(null);
     const [telemetryPayload, setTelemetryPayload] = useState("{}");
 
@@ -23,13 +24,29 @@ function SatellitePage() {
         }
     };
 
+    const createSatellite = async () => {
+        if (!newSatellite.satellite_id || !newSatellite.name) {
+            alert("Satellite ID and Name are required!");
+            return;
+        }
+        try {
+            await axios.post(`${API_BASE_URL}/satellites`, newSatellite);
+            fetchSatellites();
+            setNewSatellite({ satellite_id: "", name: "" }); // ✅ Reset input fields
+            alert("Satellite created successfully!");
+        } catch (error) {
+            console.error("Error creating satellite:", error);
+            alert("Failed to create satellite.");
+        }
+    };
+
     const deleteSatellite = async (satellite_id) => {
         if (!window.confirm(`Are you sure you want to delete ${satellite_id}?`)) {
             return;
         }
         try {
             await axios.delete(`${API_BASE_URL}/satellites/${satellite_id}`);
-            fetchSatellites();
+            fetchSatellites(); // ✅ Refresh the list after deletion
             alert(`Satellite ${satellite_id} deleted successfully!`);
         } catch (error) {
             console.error("Error deleting satellite:", error);
@@ -44,14 +61,17 @@ function SatellitePage() {
         }
         try {
             const parsedTelemetry = JSON.parse(telemetryPayload);
-            await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
+            const response = await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
                 telemetry_payload: parsedTelemetry
             });
-            fetchSatellites();
-            alert("Telemetry updated successfully!");
+
+            if (response.status === 200) {
+                alert("Telemetry updated successfully!");
+                fetchSatellites(); // ✅ Refresh the list after update
+            }
         } catch (error) {
             console.error("Error updating telemetry:", error);
-            alert("Invalid JSON format!");
+            alert("Invalid JSON format or server error!");
         }
     };
 
@@ -59,7 +79,21 @@ function SatellitePage() {
         <div>
             <h2>Manage Satellites</h2>
 
-            {/* Satellite List */}
+            {/* ✅ ADD SATELLITE INPUT FORM */}
+            <div className="card p-3 mb-4">
+                <h3>Add a New Satellite</h3>
+                <input type="text" placeholder="Satellite ID"
+                       className="form-control mb-2"
+                       value={newSatellite.satellite_id}
+                       onChange={(e) => setNewSatellite({ ...newSatellite, satellite_id: e.target.value })} />
+                <input type="text" placeholder="Satellite Name"
+                       className="form-control mb-2"
+                       value={newSatellite.name}
+                       onChange={(e) => setNewSatellite({ ...newSatellite, name: e.target.value })} />
+                <button className="btn btn-primary" onClick={createSatellite}>Create Satellite</button>
+            </div>
+
+            {/* ✅ Satellite List */}
             <h3>Satellites</h3>
             <table className="table table-bordered">
                 <thead>
@@ -92,7 +126,7 @@ function SatellitePage() {
                 </tbody>
             </table>
 
-            {/* Edit Telemetry Payload */}
+            {/* ✅ Edit Telemetry Payload */}
             {selectedSatellite && (
                 <div className="card p-3 mt-4">
                     <h3>Edit Telemetry Payload for {selectedSatellite.name}</h3>
