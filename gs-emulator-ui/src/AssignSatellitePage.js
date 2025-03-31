@@ -9,6 +9,7 @@ function AssignSatellitePage() {
     const [selectedSatellite, setSelectedSatellite] = useState("");
     const [selectedGroundStation, setSelectedGroundStation] = useState("");
     const [assignments, setAssignments] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         fetchSatellites();
@@ -57,6 +58,12 @@ function AssignSatellitePage() {
         fetchAssignments(selectedSatellite);
     };
 
+    const filteredAssignments = assignments.filter((a) => {
+        const gs = groundStations.find(gs => gs.ground_station_id === a.ground_station_id);
+        const text = (a.ground_station_id + (gs?.name || "")).toLowerCase();
+        return text.includes(searchTerm.toLowerCase());
+    });
+
     return (
         <div>
             <h2>Assign Satellite to Ground Stations</h2>
@@ -104,27 +111,44 @@ function AssignSatellitePage() {
             {selectedSatellite && (
                 <div>
                     <h4>Assignments for {selectedSatellite}</h4>
+
+                    {/* 🔍 Filter input */}
+                    <div className="mb-3">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by Ground Station ID or Name"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
                     <table className="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Ground Station ID</th>
+                                <th>Name</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {assignments.map((a) => (
-                                <tr key={a.ground_station_id}>
-                                    <td>{a.ground_station_id}</td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-danger"
-                                            onClick={() => unassign(a.ground_station_id)}
-                                        >
-                                            Unassign
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {filteredAssignments.map((a) => {
+                                const gs = groundStations.find(gs => gs.ground_station_id === a.ground_station_id);
+                                return (
+                                    <tr key={a.ground_station_id}>
+                                        <td>{a.ground_station_id}</td>
+                                        <td>{gs?.name || "Unknown"}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-sm btn-danger"
+                                                onClick={() => unassign(a.ground_station_id)}
+                                            >
+                                                Unassign
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

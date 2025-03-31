@@ -11,12 +11,17 @@ class SatelliteAssignment(db.Model):
 class SatelliteAssignmentAPI(Resource):
     def get(self, satellite_id=None):
         """
-        GET: Return assignments.
-        - If satellite_id is provided, return all ground stations assigned to it.
-        - If not, return all assignments.
+        GET:
+        - /assignments → all assignments
+        - /assignments/<satellite_id> → ground stations for satellite
+        - /assignments?ground_station_id=gs-1 → satellites for ground station
         """
+        ground_station_id = request.args.get("ground_station_id")
+
         if satellite_id:
             assignments = SatelliteAssignment.query.filter_by(satellite_id=satellite_id).all()
+        elif ground_station_id:
+            assignments = SatelliteAssignment.query.filter_by(ground_station_id=ground_station_id).all()
         else:
             assignments = SatelliteAssignment.query.all()
 
@@ -28,6 +33,7 @@ class SatelliteAssignmentAPI(Resource):
             for a in assignments
         ]
         return result, 200
+
 
     def post(self):
         """

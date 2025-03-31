@@ -10,95 +10,84 @@ function SatellitePage() {
     const [newSatellite, setNewSatellite] = useState({ satellite_id: "", name: "" });
     const [selectedSatellite, setSelectedSatellite] = useState(null);
     const [telemetryPayload, setTelemetryPayload] = useState("{}");
+    const [assignments, setAssignments] = useState([]);
+    const [viewAssignmentsId, setViewAssignmentsId] = useState(null);
 
     useEffect(() => {
         fetchSatellites();
     }, []);
 
     const fetchSatellites = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/satellites`);
-            setSatellites(response.data);
-        } catch (error) {
-            console.error("Error fetching satellites:", error);
-        }
+        const res = await axios.get(`${API_BASE_URL}/satellites`);
+        setSatellites(res.data);
     };
 
     const createSatellite = async () => {
-        if (!newSatellite.satellite_id || !newSatellite.name) {
-            alert("Satellite ID and Name are required!");
-            return;
-        }
-        try {
-            await axios.post(`${API_BASE_URL}/satellites`, newSatellite);
-            fetchSatellites();
-            setNewSatellite({ satellite_id: "", name: "" }); // ✅ Reset input fields
-            alert("Satellite created successfully!");
-        } catch (error) {
-            console.error("Error creating satellite:", error);
-            alert("Failed to create satellite.");
-        }
+        const { satellite_id, name } = newSatellite;
+        if (!satellite_id || !name) return alert("Satellite ID and name required.");
+
+        await axios.post(`${API_BASE_URL}/satellites`, newSatellite);
+        fetchSatellites();
+        setNewSatellite({ satellite_id: "", name: "" });
     };
 
-    const deleteSatellite = async (satellite_id) => {
-        if (!window.confirm(`Are you sure you want to delete ${satellite_id}?`)) {
-            return;
-        }
-        try {
-            await axios.delete(`${API_BASE_URL}/satellites/${satellite_id}`);
-            fetchSatellites(); // ✅ Refresh the list after deletion
-            alert(`Satellite ${satellite_id} deleted successfully!`);
-        } catch (error) {
-            console.error("Error deleting satellite:", error);
-            alert("Failed to delete the satellite.");
-        }
+    const deleteSatellite = async (id) => {
+        await axios.delete(`${API_BASE_URL}/satellites/${id}`);
+        fetchSatellites();
     };
 
     const updateTelemetry = async () => {
-        if (!selectedSatellite) {
-            alert("No satellite selected!");
-            return;
-        }
         try {
-            const parsedTelemetry = JSON.parse(telemetryPayload);
-            const response = await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
-                telemetry_payload: parsedTelemetry
+            const parsed = JSON.parse(telemetryPayload);
+            await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
+                telemetry_payload: parsed,
             });
-
-            if (response.status === 200) {
-                alert("Telemetry updated successfully!");
-                fetchSatellites(); // ✅ Refresh the list after update
-            }
-        } catch (error) {
-            console.error("Error updating telemetry:", error);
-            alert("Invalid JSON format or server error!");
+            fetchSatellites();
+            alert("Telemetry updated.");
+        } catch (e) {
+            alert("Invalid JSON.");
         }
+    };
+
+    const handleEdit = (sat) => {
+        setSelectedSatellite(sat);
+        setTelemetryPayload(JSON.stringify(sat.telemetry_payload || {}, null, 2));
+    };
+
+    const handleViewAssignments = async (satelliteId) => {
+        const res = await axios.get(`${API_BASE_URL}/assignments/${satelliteId}`);
+        setAssignments(res.data);
+        setViewAssignmentsId(satelliteId);
     };
 
     return (
         <div>
             <h2>Manage Satellites</h2>
 
-            {/* ✅ ADD SATELLITE INPUT FORM */}
             <div className="card p-3 mb-4">
-                <h3>Add a New Satellite</h3>
-                <input type="text" placeholder="Satellite ID"
-                       className="form-control mb-2"
-                       value={newSatellite.satellite_id}
-                       onChange={(e) => setNewSatellite({ ...newSatellite, satellite_id: e.target.value })} />
-                <input type="text" placeholder="Satellite Name"
-                       className="form-control mb-2"
-                       value={newSatellite.name}
-                       onChange={(e) => setNewSatellite({ ...newSatellite, name: e.target.value })} />
-                <button className="btn btn-primary" onClick={createSatellite}>Create Satellite</button>
+                <input
+                    className="form-control mb-2"
+                    placeholder="Satellite ID"
+                    value={newSatellite.satellite_id}
+                    onChange={(e) =>
+                        setNewSatellite({ ...newSatellite, satellite_id: e.target.value })
+                    }
+                />
+                <input
+                    className="form-control mb-2"
+                    placeholder="Satellite Name"
+                    value={newSatellite.name}
+                    onChange={(e) => setNewSatellite({ ...newSatellite, name: e.target.value })}
+                />
+                <button className="btn btn-primary" onClick={createSatellite}>
+                    Create Satellite
+                </button>
             </div>
 
-            {/* ✅ Satellite List */}
-            <h3>Satellites</h3>
             <table className="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Satellite ID</th>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Actions</th>
                     </tr>
@@ -109,16 +98,23 @@ function SatellitePage() {
                             <td>{sat.satellite_id}</td>
                             <td>{sat.name}</td>
                             <td>
-                                <button className="btn btn-info btn-sm me-2"
-                                        onClick={() => {
-                                            setSelectedSatellite(sat);
-                                            setTelemetryPayload(JSON.stringify(sat.telemetry_payload || {}, null, 2));
-                                        }}>
+                                <button
+                                    className="btn btn-info btn-sm me-2"
+                                    onClick={() => handleEdit(sat)}
+                                >
                                     Edit Telemetry
                                 </button>
-                                <button className="btn btn-danger btn-sm"
-                                        onClick={() => deleteSatellite(sat.satellite_id)}>
+                                <button
+                                    className="btn btn-danger btn-sm me-2"
+                                    onClick={() => deleteSatellite(sat.satellite_id)}
+                                >
                                     Delete
+                                </button>
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => handleViewAssignments(sat.satellite_id)}
+                                >
+                                    View Assignments
                                 </button>
                             </td>
                         </tr>
@@ -126,19 +122,34 @@ function SatellitePage() {
                 </tbody>
             </table>
 
-            {/* ✅ Edit Telemetry Payload */}
             {selectedSatellite && (
                 <div className="card p-3 mt-4">
-                    <h3>Edit Telemetry Payload for {selectedSatellite.name}</h3>
-                    <textarea className="form-control"
-                              rows="6"
-                              value={telemetryPayload}
-                              onChange={(e) => setTelemetryPayload(e.target.value)} />
-                    <button className="btn btn-success mt-3" onClick={updateTelemetry}>
+                    <h5>Edit Telemetry for {selectedSatellite.name}</h5>
+                    <textarea
+                        className="form-control mb-2"
+                        rows={6}
+                        value={telemetryPayload}
+                        onChange={(e) => setTelemetryPayload(e.target.value)}
+                    />
+                    <button className="btn btn-success" onClick={updateTelemetry}>
                         Update Telemetry
                     </button>
-                    <h4 className="mt-3">Telemetry Data Preview:</h4>
                     <JSONPretty data={telemetryPayload}></JSONPretty>
+                </div>
+            )}
+
+            {viewAssignmentsId && (
+                <div className="card p-3 mt-4">
+                    <h5>Assigned Ground Stations for {viewAssignmentsId}</h5>
+                    {assignments.length > 0 ? (
+                        <ul>
+                            {assignments.map((a) => (
+                                <li key={a.ground_station_id}>{a.ground_station_id}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-muted">No ground stations assigned.</p>
+                    )}
                 </div>
             )}
         </div>
