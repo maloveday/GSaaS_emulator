@@ -1,29 +1,67 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, NavLink, Navigate } from "react-router-dom";
 import SatellitePage from "./SatellitePage";
 import GroundStationPage from "./GroundStationPage";
 import AssignSatellitePage from "./AssignSatellitePage";
-import AssignmentOverviewPage from './AssignmentOverviewPage';
+import AssignmentOverviewPage from "./AssignmentOverviewPage";
+import "./App.css";
 
 function App() {
     return (
         <Router>
-            <div className="container">
-                <h1>Ground Station API Emulator</h1>
-                <nav>
-                    <Link to="/satellites">Manage Satellites</Link> | 
-                    <Link to="/groundstations">Manage Ground Stations</Link> | 
-                    <Link to="/assign">Assign Satellite to Ground Station</Link> |
-                    <Link to="/overview">Assignment Overview</Link>
-                </nav>
+            <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+                <div className="container">
+                    <NavLink className="navbar-brand d-flex align-items-center gap-2" to="/satellites">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        GSaaS Emulator
+                    </NavLink>
 
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNav"
+                        aria-controls="mainNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span className="navbar-toggler-icon" />
+                    </button>
+
+                    <div className="collapse navbar-collapse" id="mainNav">
+                        <ul className="navbar-nav ms-auto">
+                            {[
+                                { to: "/satellites",    label: "Satellites" },
+                                { to: "/groundstations",label: "Ground Stations" },
+                                { to: "/assign",        label: "Assign" },
+                                { to: "/overview",      label: "Overview" },
+                            ].map(({ to, label }) => (
+                                <li className="nav-item" key={to}>
+                                    <NavLink className="nav-link px-3" to={to}>{label}</NavLink>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <main className="container py-4 flex-grow-1">
                 <Routes>
-                    <Route path="/satellites" element={<SatellitePage />} />
+                    <Route path="/" element={<Navigate to="/satellites" replace />} />
+                    <Route path="/satellites"     element={<SatellitePage />} />
                     <Route path="/groundstations" element={<GroundStationPage />} />
-                    <Route path="/assign" element={<AssignSatellitePage />} />
-                    <Route path="/overview" element={<AssignmentOverviewPage />} />
+                    <Route path="/assign"         element={<AssignSatellitePage />} />
+                    <Route path="/overview"       element={<AssignmentOverviewPage />} />
                 </Routes>
-            </div>
+            </main>
+
+            <footer className="page-footer">
+                GSaaS Emulator &mdash; Mock AWS Ground Station API
+            </footer>
         </Router>
     );
 }
