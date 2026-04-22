@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import JSONPretty from "react-json-pretty";
 import "react-json-pretty/themes/monikai.css";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "";
 
 function Alert({ msg, onClose }) {
     if (!msg.text) return null;
@@ -25,91 +25,91 @@ function Spinner() {
     );
 }
 
-function GroundStationPage() {
-    const [groundStations, setGroundStations] = useState([]);
+function SatellitePage() {
+    const [satellites, setSatellites] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [newStation, setNewStation] = useState({ ground_station_id: "", name: "" });
+    const [newSatellite, setNewSatellite] = useState({ satellite_id: "", name: "" });
     const [creating, setCreating] = useState(false);
-    const [selectedStation, setSelectedStation] = useState(null);
+    const [selectedSatellite, setSelectedSatellite] = useState(null);
     const [telemetryPayload, setTelemetryPayload] = useState("{}");
     const [assignments, setAssignments] = useState([]);
     const [viewAssignmentsId, setViewAssignmentsId] = useState(null);
     const [msg, setMsg] = useState({ text: "", type: "" });
 
-    useEffect(() => { fetchGroundStations(); }, []);
+    useEffect(() => { fetchSatellites(); }, []);
 
     const showMsg = (text, type = "success") => setMsg({ text, type });
     const clearMsg = () => setMsg({ text: "", type: "" });
 
-    const fetchGroundStations = async () => {
+    const fetchSatellites = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}/groundstations`);
-            setGroundStations(res.data);
+            const res = await axios.get(`${API_BASE_URL}/satellites`);
+            setSatellites(res.data);
         } catch {
-            showMsg("Failed to load ground stations.", "danger");
+            showMsg("Failed to load satellites.", "danger");
         } finally {
             setLoading(false);
         }
     };
 
-    const createGroundStation = async (e) => {
+    const createSatellite = async (e) => {
         e.preventDefault();
-        const { ground_station_id, name } = newStation;
-        if (!ground_station_id || !name) return showMsg("ID and name are required.", "warning");
+        const { satellite_id, name } = newSatellite;
+        if (!satellite_id || !name) return showMsg("Satellite ID and name are required.", "warning");
         setCreating(true);
         try {
-            await axios.post(`${API_BASE_URL}/groundstations`, newStation);
-            setNewStation({ ground_station_id: "", name: "" });
-            showMsg(`Ground station "${name}" created successfully.`);
-            fetchGroundStations();
+            await axios.post(`${API_BASE_URL}/satellites`, newSatellite);
+            setNewSatellite({ satellite_id: "", name: "" });
+            showMsg(`Satellite "${name}" created successfully.`);
+            fetchSatellites();
         } catch (err) {
-            showMsg(err.response?.data?.message || "Failed to create ground station.", "danger");
+            showMsg(err.response?.data?.message || "Failed to create satellite.", "danger");
         } finally {
             setCreating(false);
         }
     };
 
-    const deleteStation = async (id, name) => {
-        if (!window.confirm(`Delete ground station "${name}"?`)) return;
+    const deleteSatellite = async (id, name) => {
+        if (!window.confirm(`Delete satellite "${name}"?`)) return;
         try {
-            await axios.delete(`${API_BASE_URL}/groundstations/${id}`);
-            showMsg(`Ground station "${name}" deleted.`);
-            if (selectedStation?.ground_station_id === id) setSelectedStation(null);
+            await axios.delete(`${API_BASE_URL}/satellites/${id}`);
+            showMsg(`Satellite "${name}" deleted.`);
+            if (selectedSatellite?.satellite_id === id) setSelectedSatellite(null);
             if (viewAssignmentsId === id) setViewAssignmentsId(null);
-            fetchGroundStations();
+            fetchSatellites();
         } catch {
-            showMsg("Failed to delete ground station.", "danger");
+            showMsg("Failed to delete satellite.", "danger");
         }
     };
 
     const updateTelemetry = async () => {
         try {
             const parsed = JSON.parse(telemetryPayload);
-            await axios.put(`${API_BASE_URL}/groundstations/${selectedStation.ground_station_id}`, {
+            await axios.put(`${API_BASE_URL}/satellites/${selectedSatellite.satellite_id}`, {
                 telemetry_payload: parsed,
             });
             showMsg("Telemetry updated successfully.");
-            fetchGroundStations();
+            fetchSatellites();
         } catch (e) {
             showMsg(e.name === "SyntaxError" ? "Invalid JSON in telemetry payload." : "Failed to update telemetry.", "danger");
         }
     };
 
-    const handleEdit = (gs) => {
-        setSelectedStation(gs);
-        setTelemetryPayload(JSON.stringify(gs.telemetry_payload || {}, null, 2));
+    const handleEdit = (sat) => {
+        setSelectedSatellite(sat);
+        setTelemetryPayload(JSON.stringify(sat.telemetry_payload || {}, null, 2));
     };
 
-    const handleViewAssignments = async (stationId) => {
-        if (viewAssignmentsId === stationId) {
+    const handleViewAssignments = async (satelliteId) => {
+        if (viewAssignmentsId === satelliteId) {
             setViewAssignmentsId(null);
             return;
         }
         try {
-            const res = await axios.get(`${API_BASE_URL}/assignments?ground_station_id=${stationId}`);
+            const res = await axios.get(`${API_BASE_URL}/assignments/${satelliteId}`);
             setAssignments(res.data);
-            setViewAssignmentsId(stationId);
+            setViewAssignmentsId(satelliteId);
         } catch {
             showMsg("Failed to load assignments.", "danger");
         }
@@ -118,33 +118,33 @@ function GroundStationPage() {
     return (
         <div>
             <div className="d-flex align-items-center mb-4">
-                <h2 className="mb-0 fw-semibold">Ground Stations</h2>
-                <span className="badge bg-secondary ms-2">{groundStations.length}</span>
+                <h2 className="mb-0 fw-semibold">Satellites</h2>
+                <span className="badge bg-secondary ms-2">{satellites.length}</span>
             </div>
 
             <Alert msg={msg} onClose={clearMsg} />
 
             {/* Create form */}
             <div className="card shadow-sm mb-4">
-                <div className="card-header bg-white fw-semibold">Add New Ground Station</div>
+                <div className="card-header bg-white fw-semibold">Add New Satellite</div>
                 <div className="card-body">
-                    <form onSubmit={createGroundStation} className="row g-3">
+                    <form onSubmit={createSatellite} className="row g-3">
                         <div className="col-md-5">
-                            <label className="form-label small text-muted">Station ID</label>
+                            <label className="form-label small text-muted">Satellite ID</label>
                             <input
                                 className="form-control"
-                                placeholder="e.g. gs-north"
-                                value={newStation.ground_station_id}
-                                onChange={(e) => setNewStation({ ...newStation, ground_station_id: e.target.value })}
+                                placeholder="e.g. sat-alpha"
+                                value={newSatellite.satellite_id}
+                                onChange={(e) => setNewSatellite({ ...newSatellite, satellite_id: e.target.value })}
                             />
                         </div>
                         <div className="col-md-5">
                             <label className="form-label small text-muted">Name</label>
                             <input
                                 className="form-control"
-                                placeholder="e.g. Northern Outpost"
-                                value={newStation.name}
-                                onChange={(e) => setNewStation({ ...newStation, name: e.target.value })}
+                                placeholder="e.g. Alpha Sat"
+                                value={newSatellite.name}
+                                onChange={(e) => setNewSatellite({ ...newSatellite, name: e.target.value })}
                             />
                         </div>
                         <div className="col-md-2 d-flex align-items-end">
@@ -158,7 +158,7 @@ function GroundStationPage() {
 
             {/* Table */}
             <div className="card shadow-sm mb-4">
-                <div className="card-header bg-white fw-semibold">Ground Station List</div>
+                <div className="card-header bg-white fw-semibold">Satellite List</div>
                 {loading ? <Spinner /> : (
                     <div className="table-responsive">
                         <table className="table table-hover align-middle mb-0">
@@ -170,32 +170,32 @@ function GroundStationPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {groundStations.length === 0 ? (
+                                {satellites.length === 0 ? (
                                     <tr>
                                         <td colSpan="3" className="text-center text-muted py-4">
-                                            No ground stations yet. Create one above.
+                                            No satellites yet. Create one above.
                                         </td>
                                     </tr>
-                                ) : groundStations.map((gs) => (
-                                    <tr key={gs.ground_station_id}>
-                                        <td><code>{gs.ground_station_id}</code></td>
-                                        <td>{gs.name}</td>
+                                ) : satellites.map((sat) => (
+                                    <tr key={sat.satellite_id}>
+                                        <td><code>{sat.satellite_id}</code></td>
+                                        <td>{sat.name}</td>
                                         <td className="text-end">
                                             <button
                                                 className="btn btn-outline-secondary btn-sm me-2"
-                                                onClick={() => handleEdit(gs)}
+                                                onClick={() => handleEdit(sat)}
                                             >
                                                 Edit Telemetry
                                             </button>
                                             <button
                                                 className="btn btn-outline-primary btn-sm me-2"
-                                                onClick={() => handleViewAssignments(gs.ground_station_id)}
+                                                onClick={() => handleViewAssignments(sat.satellite_id)}
                                             >
-                                                {viewAssignmentsId === gs.ground_station_id ? "Hide" : "Satellites"}
+                                                {viewAssignmentsId === sat.satellite_id ? "Hide" : "Assignments"}
                                             </button>
                                             <button
                                                 className="btn btn-outline-danger btn-sm"
-                                                onClick={() => deleteStation(gs.ground_station_id, gs.name)}
+                                                onClick={() => deleteSatellite(sat.satellite_id, sat.name)}
                                             >
                                                 Delete
                                             </button>
@@ -212,16 +212,16 @@ function GroundStationPage() {
             {viewAssignmentsId && (
                 <div className="card shadow-sm mb-4">
                     <div className="card-header bg-white fw-semibold">
-                        Satellites assigned to <code>{viewAssignmentsId}</code>
+                        Ground Stations assigned to <code>{viewAssignmentsId}</code>
                     </div>
                     <div className="card-body">
                         {assignments.length === 0 ? (
-                            <p className="text-muted mb-0">No satellites assigned.</p>
+                            <p className="text-muted mb-0">No ground stations assigned.</p>
                         ) : (
                             <ul className="list-group list-group-flush">
                                 {assignments.map((a) => (
-                                    <li key={a.satellite_id} className="list-group-item px-0">
-                                        <code>{a.satellite_id}</code>
+                                    <li key={a.ground_station_id} className="list-group-item px-0">
+                                        <code>{a.ground_station_id}</code>
                                     </li>
                                 ))}
                             </ul>
@@ -231,16 +231,16 @@ function GroundStationPage() {
             )}
 
             {/* Telemetry editor */}
-            {selectedStation && (
+            {selectedSatellite && (
                 <div className="card shadow-sm">
                     <div className="card-header bg-white d-flex justify-content-between align-items-center">
                         <span className="fw-semibold">
-                            Edit Telemetry &mdash; <code>{selectedStation.name}</code>
+                            Edit Telemetry &mdash; <code>{selectedSatellite.name}</code>
                         </span>
                         <button
                             type="button"
                             className="btn-close"
-                            onClick={() => setSelectedStation(null)}
+                            onClick={() => setSelectedSatellite(null)}
                             aria-label="Close"
                         />
                     </div>
@@ -265,4 +265,4 @@ function GroundStationPage() {
     );
 }
 
-export default GroundStationPage;
+export default SatellitePage;
