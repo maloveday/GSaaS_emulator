@@ -7,8 +7,8 @@ The **GSaaS Emulator** is a full-stack application that simulates a Ground Stati
 - Perform CRUD operations on **Satellites** and **Ground Stations**
 - Set and update **telemetry payloads**
 - Assign a **satellite to one or more ground stations**
-- View assignments in a dedicated **overview dashboard**
-- Inspect assignment relationships from either the satellite or ground station perspective
+- Schedule and track **satellite pass windows** against ground stations
+- View assignments and passes in dedicated dashboard pages
 
 This emulator is intended for development, demonstration, and education purposes.
 
@@ -32,9 +32,19 @@ GSaaS_emulator/
 ├── satellite.py           # Satellite model and API resource
 ├── groundstation.py       # Ground Station model and API resource
 ├── assignment.py          # Assignment model and API resource
+├── passes.py              # Satellite pass model and API resource
 ├── requirements.txt       # Python dependencies
-└── gs-emulator-ui/        # React frontend
+└── gs-emulator-ui/        # React + Vite frontend
+    ├── index.html         # Vite entry HTML
+    ├── vite.config.js     # Vite configuration and dev-server proxy
     ├── src/
+    │   ├── main.jsx
+    │   ├── App.jsx
+    │   ├── SatellitePage.jsx
+    │   ├── GroundStationPage.jsx
+    │   ├── AssignSatellitePage.jsx
+    │   ├── AssignmentOverviewPage.jsx
+    │   └── PassSchedulingPage.jsx
     └── public/
 ```
 
@@ -81,8 +91,6 @@ The API will be available at `http://localhost:5000`. On first run, the SQLite d
 
 ### Deactivating the virtual environment
 
-When you are done, deactivate with:
-
 ```bash
 deactivate
 ```
@@ -91,6 +99,8 @@ deactivate
 
 ## Frontend Setup
 
+The frontend uses **Vite** as the build tool. The Vite dev server proxies all API calls to `http://localhost:5000` automatically, so no CORS configuration is needed during development.
+
 ### 1. Install dependencies
 
 ```bash
@@ -98,13 +108,21 @@ cd gs-emulator-ui
 npm install
 ```
 
-### 2. Start the React development server
+### 2. Start the development server
 
 ```bash
-npm start
+npm run dev
 ```
 
 The UI will be available at `http://localhost:3000`.
+
+### 3. Build for production
+
+```bash
+npm run build
+```
+
+The production bundle is written to `gs-emulator-ui/dist/`.
 
 ---
 
@@ -166,19 +184,52 @@ The UI will be available at `http://localhost:3000`.
 
 ---
 
+### Pass Scheduling API
+
+Satellite passes represent scheduled communication windows between a satellite and a ground station. Status is computed dynamically from wall-clock UTC time — no manual status updates are needed.
+
+| Status | Meaning |
+|--------|---------|
+| `SCHEDULED` | Pass is in the future |
+| `IN_PROGRESS` | Current time is within the pass window |
+| `COMPLETED` | Pass window has elapsed |
+| `CANCELLED` | Manually cancelled |
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/passes` | List all passes (ordered by start time) |
+| GET | `/passes/<pass_id>` | Get a single pass |
+| POST | `/passes` | Schedule a new pass |
+| DELETE | `/passes/<pass_id>` | Cancel a pass |
+
+**POST body:**
+```json
+{
+  "satellite_id": "sat-1",
+  "ground_station_id": "gs-1",
+  "start_time": "2025-06-01T10:00:00.000Z",
+  "end_time":   "2025-06-01T10:12:00.000Z"
+}
+```
+
+> Times must be ISO 8601 UTC strings. `end_time` must be after `start_time`. Completed passes cannot be cancelled.
+
+---
+
 ## Design Notes
 
-- **Modular structure** — `satellite.py`, `groundstation.py`, and `assignment.py` each own one domain, following the same model/resource pattern.
+- **Modular structure** — each domain (`satellite`, `groundstation`, `assignment`, `passes`) lives in its own file, following the same model/resource pattern.
 - **Shared database instance** — `database.py` holds a single `SQLAlchemy` object initialised with `db.init_app(app)` to avoid circular imports.
-- **One-to-many assignments** — a satellite can be assigned to multiple ground stations via a join table.
-- **CORS enabled** — `Flask-CORS` allows the React frontend on port 3000 to call the API on port 5000 during development.
-- **SQLite** — zero-configuration database stored in `gs_emulator.db` (excluded from version control via `.gitignore`).
+- **Dynamic pass status** — pass status is derived from the current UTC time on every `GET` request; no background jobs or cron tasks are needed.
+- **Vite dev proxy** — `vite.config.js` proxies `/satellites`, `/groundstations`, `/assignments`, and `/passes` to `http://localhost:5000`, so frontend components use relative paths and no CORS headers are required.
+- **CORS enabled** — `Flask-CORS` is still configured for cases where the frontend is served separately (e.g., production).
+- **SQLite** — zero-configuration database stored in `gs_emulator.db` (excluded from version control).
 
 ---
 
 ## Future Improvements
 
 - Add user authentication
-- Implement satellite pass scheduling emulation
 - Export telemetry history per satellite / ground station
-- Migrate frontend tooling from Create React App to Vite
+- Visualise pass windows on a timeline or map
+- Add Vitest unit tests for frontend components

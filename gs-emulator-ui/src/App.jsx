@@ -4,7 +4,16 @@ import SatellitePage from "./SatellitePage";
 import GroundStationPage from "./GroundStationPage";
 import AssignSatellitePage from "./AssignSatellitePage";
 import AssignmentOverviewPage from "./AssignmentOverviewPage";
+import PassSchedulingPage from "./PassSchedulingPage";
 import "./App.css";
+
+const NAV_LINKS = [
+    { to: "/satellites",    label: "Satellites" },
+    { to: "/groundstations",label: "Ground Stations" },
+    { to: "/assign",        label: "Assign" },
+    { to: "/passes",        label: "Pass Scheduling" },
+    { to: "/overview",      label: "Overview" },
+];
 
 function App() {
     return (
@@ -34,12 +43,7 @@ function App() {
 
                     <div className="collapse navbar-collapse" id="mainNav">
                         <ul className="navbar-nav ms-auto">
-                            {[
-                                { to: "/satellites",    label: "Satellites" },
-                                { to: "/groundstations",label: "Ground Stations" },
-                                { to: "/assign",        label: "Assign" },
-                                { to: "/overview",      label: "Overview" },
-                            ].map(({ to, label }) => (
+                            {NAV_LINKS.map(({ to, label }) => (
                                 <li className="nav-item" key={to}>
                                     <NavLink className="nav-link px-3" to={to}>{label}</NavLink>
                                 </li>
@@ -55,6 +59,7 @@ function App() {
                     <Route path="/satellites"     element={<SatellitePage />} />
                     <Route path="/groundstations" element={<GroundStationPage />} />
                     <Route path="/assign"         element={<AssignSatellitePage />} />
+                    <Route path="/passes"         element={<PassSchedulingPage />} />
                     <Route path="/overview"       element={<AssignmentOverviewPage />} />
                 </Routes>
             </main>
