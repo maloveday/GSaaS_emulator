@@ -11,6 +11,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
+# Import resources after initialising the app to avoid circular imports
 from satellite import SatelliteAPI
 from groundstation import GroundStationAPI
 from assignment import SatelliteAssignmentAPI
