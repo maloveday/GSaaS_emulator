@@ -1,55 +1,111 @@
-# GSaaS_emulator
+# Ground Station as a Service (GSaaS) Emulator
 
-A python 3 script that emulated the AWS Ground Station as a Service API.
+## 📌 Summary
 
-## Mock AWS Ground Station as a Service (GSaaS) API
+The **GSaaS Emulator** is a full-stack application designed to simulate a Ground Station-as-a-Service platform. It allows users to:
 
-To emulate the AWS Ground Station as a Service (GSaaS) API, we'll create a mock server using Python's Flask library. This server will mimic the basic endpoints and functionalities of the Ground Station API, such as:
+- Perform CRUD operations on **Satellites** and **Ground Stations**
+- Set and update **telemetry payloads**
+- Assign a **satellite to one or more ground stations**
+- View assignments in a dedicated **overview dashboard**
+- Inspect assignment relationships from either the satellite or ground station perspective
 
-- Listing satellites
-- Listing ground stations
-- Scheduling a contact
-- Retrieving contact status
+This emulator is intended for development, demonstration, and education purposes.
 
-This mock API will be useful for testing purposes, though it won’t interact with real satellites or ground stations. Instead, it will store and return dummy data to simulate the behavior of the actual AWS Ground Station API.
+---
 
-## Prerequisites
+## 🔧 Prerequisites
 
-1. Install Flask:
+### Backend:
+- Python 3.9+
+- `pip` or `pipenv`
+- Flask
+- Flask-RESTful
+- Flask-CORS
+- Flask-SQLAlchemy
 
-   ```bash
-   pip install Flask
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-2. Install Flask-RESTful (for simpler REST API implementation):
+> (or use `pipenv install` if using Pipenv)
 
-   ```bash
-   pip install Flask-RESTful
+### Frontend:
+- Node.js 18+
+- npm
 
-## Explanation of Endpoints
+Install frontend dependencies:
+```bash
+cd gs-emulator-ui
+npm install
+```
 
-1. /satellites (GET): Returns a list of available satellites in JSON format.
-2. /groundstations (GET): Returns a list of available ground stations in JSON format.
-3. /schedulecontact (POST): Accepts a JSON payload with satelliteId, groundStationId, startTime, and endTime to schedule a contact. It validates the IDs, generates a unique contactId, and stores the contact information in memory.
-4. /contactstatus/<contact_id> (GET): Retrieves the status of a contact by contactId. It updates the status to "IN_PROGRESS" if the current time is within the contact duration or to "COMPLETED" if the end time has passed.
+---
 
-## Testing the Mock API
+## 🌐 API Endpoints
 
-1. Start the server by running the script:
+### Satellite API
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/satellites` | List all satellites |
+| POST | `/satellites` | Create a new satellite |
+| PUT | `/satellites/<satellite_id>` | Update telemetry payload |
+| DELETE | `/satellites/<satellite_id>` | Delete satellite |
 
-   ```bash
-   python <script_name>.py
+### Ground Station API
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/groundstations` | List all ground stations |
+| POST | `/groundstations` | Create a new ground station |
+| PUT | `/groundstations/<ground_station_id>` | Update telemetry payload |
+| DELETE | `/groundstations/<ground_station_id>` | Delete ground station |
 
-2. Test the endpoints using curl or Postman:
+### Assignment API
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/assignments` | List all assignments |
+| GET | `/assignments/<satellite_id>` | List ground stations assigned to a satellite |
+| GET | `/assignments?ground_station_id=<id>` | List satellites assigned to a ground station |
+| POST | `/assignments` | Assign a satellite to a ground station |
+| DELETE | `/assignments` | Unassign a satellite from a ground station |
 
-- List satellites: GET http://127.0.0.1:5000/satellites
-- List ground stations: GET http://127.0.0.1:5000/groundstations
-- Schedule a contact: POST http://127.0.0.1:5000/schedulecontact
-- Get contact status: GET http://127.0.0.1:5000/contactstatus/<contact_id>
+---
 
-Note: schedulecontact.json has example data for POST
+## ▶️ How to Start the Application
 
-## Important Notes
+### Backend
 
-- Data Persistence: This mock server uses an in-memory dictionary for simplicity. Restarting the server will clear all data.
-- Time-based Status Simulation: The GetContactStatus endpoint updates the contact status based on the current time relative to the scheduled start and end times, simulating real-world contact progression.
-- Extendability: You can add more endpoints or improve functionality, such as validation, error handling, and logging, to make this emulation more robust.
+```bash
+python GSaaS_emulator.py
+```
+
+> This will create `gs_emulator.db` if it doesn't exist and start the Flask API on port 5000.
+
+### Frontend
+
+```bash
+cd gs-emulator-ui
+npm start
+```
+
+> React app will run on [http://localhost:3000](http://localhost:3000) by default.
+
+---
+
+## 📌 Design Justifications
+
+- **Modular Python structure**: `satellite.py`, `groundstation.py`, and `assignment.py` each encapsulate one domain and follow the same model/API class pattern for clarity and consistency.
+- **One-to-many assignment model**: One satellite can be assigned to multiple ground stations using a clean linking table in the database.
+- **PEP 8 compliant docstrings**: Code is documented using Python docstring standards to help junior developers understand functionality.
+- **RESTful design**: Each domain is exposed via well-scoped, logically grouped endpoints.
+- **Frontend in React**: Provides a clean and responsive UI using modern patterns, including real-time list views, assignment management, and telemetry editing with JSON validation.
+
+---
+
+## 🚀 Future Improvements
+
+- Add user authentication
+- Implement satellite pass scheduling emulation
+- Export telemetry history per satellite/ground station
+- Migrate to Vite or another modern frontend tooling system
