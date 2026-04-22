@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GSaaS Emulator</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/>
+          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span>GSaaS Emulator</span>
+      </div>
+      <div class="header-badge">Mock API</div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Assets Row -->
+    <div class="grid-2">
+
+      <!-- Satellites -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="m12 2 3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/>
+            </svg>
+            Satellites
+          </h2>
+          <button class="btn btn-ghost btn-sm" id="refresh-satellites">Refresh</button>
+        </div>
+        <div id="satellites-list" class="item-list">
+          <div class="loading">Loading…</div>
+        </div>
+      </section>
+
+      <!-- Ground Stations -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5M12 12h.01M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
+            </svg>
+            Ground Stations
+          </h2>
+          <button class="btn btn-ghost btn-sm" id="refresh-groundstations">Refresh</button>
+        </div>
+        <div id="groundstations-list" class="item-list">
+          <div class="loading">Loading…</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Schedule Contact -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Schedule Contact
+        </h2>
+      </div>
+      <form id="schedule-form" class="form-grid" novalidate>
+        <div class="form-group">
+          <label class="label" for="satellite-select">Satellite</label>
+          <select id="satellite-select" class="select" required>
+            <option value="">Select a satellite…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label" for="groundstation-select">Ground Station</label>
+          <select id="groundstation-select" class="select" required>
+            <option value="">Select a ground station…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label" for="start-time">Start Time (UTC)</label>
+          <input type="datetime-local" id="start-time" class="input" required />
+        </div>
+        <div class="form-group">
+          <label class="label" for="end-time">End Time (UTC)</label>
+          <input type="datetime-local" id="end-time" class="input" required />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="schedule-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+            Schedule Contact
+          </button>
+        </div>
+      </form>
+      <div id="schedule-result" class="result-box hidden"></div>
+    </section>
+
+    <!-- Contact Status -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Contact Status
+        </h2>
+      </div>
+      <div class="lookup-row">
+        <input type="text" id="contact-id-input" class="input" placeholder="Enter Contact ID…" />
+        <button class="btn btn-secondary" id="lookup-btn">Look Up</button>
+      </div>
+      <div id="status-result" class="result-box hidden"></div>
+
+      <!-- Scheduled contacts history -->
+      <div id="contacts-history" class="contacts-history hidden">
+        <h3 class="history-title">Recent Contacts</h3>
+        <ul id="contacts-list" class="contacts-list"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    GSaaS Emulator &mdash; Mock AWS Ground Station API
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
