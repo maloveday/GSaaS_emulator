@@ -10,6 +10,7 @@ export default defineConfig({
       '/groundstations':'http://localhost:5000',
       '/assignments':   'http://localhost:5000',
       '/passes':        'http://localhost:5000',
+      '/telemetry':     'http://localhost:5000',
     },
   },
   build: {

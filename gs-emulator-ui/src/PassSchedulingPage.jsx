@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE_URL = "";
@@ -175,6 +176,8 @@ function PassSchedulingPage() {
         ? passes
         : passes.filter((p) => p.status === statusFilter);
 
+    const navigate = useNavigate();
+
     const satName = (id) => satellites.find((s) => s.satellite_id === id)?.name || id;
     const gsName  = (id) => groundStations.find((g) => g.ground_station_id === id)?.name || id;
 
@@ -341,6 +344,16 @@ function PassSchedulingPage() {
                                         </td>
                                         <td><StatusBadge status={p.status} /></td>
                                         <td className="text-end">
+                                            {p.status === "IN_PROGRESS" && (
+                                                <button
+                                                    className="btn btn-outline-success btn-sm me-2"
+                                                    onClick={() => navigate(
+                                                        `/telemetry?sat=${p.satellite_id}&gs=${p.ground_station_id}`
+                                                    )}
+                                                >
+                                                    Telemetry
+                                                </button>
+                                            )}
                                             {(p.status === "SCHEDULED" || p.status === "IN_PROGRESS") && (
                                                 <button
                                                     className="btn btn-outline-danger btn-sm"

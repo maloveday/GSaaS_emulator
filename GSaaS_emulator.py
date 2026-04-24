@@ -16,6 +16,7 @@ from satellite import SatelliteAPI
 from groundstation import GroundStationAPI
 from assignment import SatelliteAssignmentAPI
 from passes import SatellitePassAPI
+from telemetry import TelemetryAPI
 
 api = Api(app)
 
@@ -23,6 +24,10 @@ api.add_resource(SatelliteAPI, "/satellites", "/satellites/<string:satellite_id>
 api.add_resource(GroundStationAPI, "/groundstations", "/groundstations/<string:ground_station_id>")
 api.add_resource(SatelliteAssignmentAPI, "/assignments", "/assignments/<string:satellite_id>")
 api.add_resource(SatellitePassAPI, "/passes", "/passes/<string:pass_id>")
+api.add_resource(
+    TelemetryAPI,
+    "/telemetry/<string:satellite_id>/<string:ground_station_id>",
+)
 
 if __name__ == "__main__":
     with app.app_context():
