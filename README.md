@@ -216,12 +216,52 @@ Satellite passes represent scheduled communication windows between a satellite a
 
 ---
 
+### Telemetry API
+
+Provides read-only access to a satellite's telemetry payload, gated by the pass window. Telemetry can only be retrieved while an active (`IN_PROGRESS`) pass exists between the satellite and the requested ground station.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/telemetry/<satellite_id>/<ground_station_id>` | Fetch telemetry if in pass window |
+
+**Response — 200 OK** (spacecraft is within the pass window):
+```json
+{
+  "satellite_id": "sat-1",
+  "satellite_name": "Alpha Sat",
+  "ground_station_id": "gs-1",
+  "ground_station_name": "Northern Outpost",
+  "pass_id": "...",
+  "pass_start": "2025-06-01T10:00:00.000Z",
+  "pass_end":   "2025-06-01T10:12:00.000Z",
+  "telemetry": { "altitude_km": 550, "signal_strength": -72 }
+}
+```
+
+**Response — 503 Service Unavailable** (spacecraft is outside the pass window):
+```json
+{
+  "error": "Spacecraft 'sat-1' is not currently in contact with ground station 'gs-1': no active pass window",
+  "next_pass_id":    "...",
+  "next_pass_start": "2025-06-01T10:00:00.000Z",
+  "next_pass_end":   "2025-06-01T10:12:00.000Z"
+}
+```
+
+> The `Retry-After` response header is included when a future pass is scheduled, indicating the number of seconds until that pass begins. The `next_pass_*` fields are omitted if no future pass exists.
+
+**Response — 404 Not Found** — satellite or ground station ID does not exist.
+
+---
+
 ## Design Notes
 
-- **Modular structure** — each domain (`satellite`, `groundstation`, `assignment`, `passes`) lives in its own file, following the same model/resource pattern.
+- **Modular structure** — each domain (`satellite`, `groundstation`, `assignment`, `passes`, `telemetry`) lives in its own file, following the same model/resource pattern.
 - **Shared database instance** — `database.py` holds a single `SQLAlchemy` object initialised with `db.init_app(app)` to avoid circular imports.
 - **Dynamic pass status** — pass status is derived from the current UTC time on every `GET` request; no background jobs or cron tasks are needed.
-- **Vite dev proxy** — `vite.config.js` proxies `/satellites`, `/groundstations`, `/assignments`, and `/passes` to `http://localhost:5000`, so frontend components use relative paths and no CORS headers are required.
+- **Pass-gated telemetry** — the telemetry endpoint reuses `_live_status()` from `passes.py` to determine contact eligibility; the same logic drives both the pass list and the telemetry gate, keeping them consistent.
+- **`Retry-After` header** — the 503 response includes this standard HTTP header so API clients can schedule an automatic retry at the right time.
+- **Vite dev proxy** — `vite.config.js` proxies `/satellites`, `/groundstations`, `/assignments`, `/passes`, and `/telemetry` to `http://localhost:5000`, so frontend components use relative paths and no CORS headers are required.
 - **CORS enabled** — `Flask-CORS` is still configured for cases where the frontend is served separately (e.g., production).
 - **SQLite** — zero-configuration database stored in `gs_emulator.db` (excluded from version control).
 

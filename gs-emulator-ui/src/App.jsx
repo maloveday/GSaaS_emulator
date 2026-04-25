@@ -5,6 +5,7 @@ import GroundStationPage from "./GroundStationPage";
 import AssignSatellitePage from "./AssignSatellitePage";
 import AssignmentOverviewPage from "./AssignmentOverviewPage";
 import PassSchedulingPage from "./PassSchedulingPage";
+import TelemetryPage from "./TelemetryPage";
 import "./App.css";
 
 const NAV_LINKS = [
@@ -12,6 +13,7 @@ const NAV_LINKS = [
     { to: "/groundstations",label: "Ground Stations" },
     { to: "/assign",        label: "Assign" },
     { to: "/passes",        label: "Pass Scheduling" },
+    { to: "/telemetry",     label: "Telemetry" },
     { to: "/overview",      label: "Overview" },
 ];
 
@@ -60,6 +62,7 @@ function App() {
                     <Route path="/groundstations" element={<GroundStationPage />} />
                     <Route path="/assign"         element={<AssignSatellitePage />} />
                     <Route path="/passes"         element={<PassSchedulingPage />} />
+                    <Route path="/telemetry"      element={<TelemetryPage />} />
                     <Route path="/overview"       element={<AssignmentOverviewPage />} />
                 </Routes>
             </main>
