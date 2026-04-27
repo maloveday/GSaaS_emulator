@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import PassTimeline from "./PassTimeline";
 
 const API_BASE_URL = "";
 
@@ -283,6 +284,11 @@ function PassSchedulingPage() {
                     </form>
                 </div>
             </div>
+
+            {/* Timeline */}
+            {!loading && passes.length > 0 && (
+                <PassTimeline passes={passes} satellites={satellites} groundStations={groundStations} />
+            )}
 
             {/* Pass list */}
             <div className="card shadow-sm">

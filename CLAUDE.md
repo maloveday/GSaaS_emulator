@@ -23,6 +23,8 @@ npm install          # first time only
 npm run dev          # dev server on http://localhost:3000
 npm run build        # production bundle → dist/
 npm run preview      # serve the production bundle locally
+npm test             # Vitest in watch mode
+npm run test:run     # Vitest single run (CI-friendly)
 ```
 
 ### Manual API testing
@@ -35,7 +37,7 @@ curl http://localhost:5000/telemetry/<satellite_id>/<ground_station_id>
 cat test/schedulecontact.json
 ```
 
-There is no automated test suite. The manual test plan is in `Ground_Station_API_Emulator_Test_Plan.md`.
+The frontend test suite uses **Vitest + @testing-library/react** with `jsdom`. Test files live in `gs-emulator-ui/src/test/`. The manual end-to-end test plan is in `Ground_Station_API_Emulator_Test_Plan.md`.
 
 ---
 
@@ -81,6 +83,8 @@ Every page component follows the same pattern:
 - Loading spinner while data is in-flight; empty-state message when list is empty
 
 `TelemetryPage.jsx` reads `?sat=` and `?gs=` URL search params on mount (via `useSearchParams`) and auto-fetches if both are present — this enables deep-linking from `PassSchedulingPage.jsx`'s "Telemetry" button on `IN_PROGRESS` rows.
+
+`PassTimeline.jsx` is a pure SVG component that visualises pass windows on a horizontal timeline. It receives `passes` and `satellites` props from `PassSchedulingPage`. The time axis range is computed dynamically from the earliest/latest pass times with 5% padding. The NOW indicator re-renders every 30 s via a `setInterval`. No external charting library is used.
 
 ### Ignored directories
 
