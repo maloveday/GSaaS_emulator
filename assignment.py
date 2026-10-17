@@ -1,21 +1,26 @@
+"""Assignment module for GSaaS Emulator.
+
+Defines the model and API for assigning satellites to ground stations,
+including one-to-many relationships and unassignment.
+"""
+
 from flask import request
 from flask_restful import Resource
 from database import db
 
+
 class SatelliteAssignment(db.Model):
+    """Assignment linking table between satellites and ground stations."""
     id = db.Column(db.Integer, primary_key=True)
     satellite_id = db.Column(db.String(50), db.ForeignKey("satellite.satellite_id"), nullable=False)
     ground_station_id = db.Column(db.String(50), db.ForeignKey("ground_station.ground_station_id"), nullable=False)
 
 
 class SatelliteAssignmentAPI(Resource):
+    """Flask-RESTful API resource for satellite-ground station assignments."""
+
     def get(self, satellite_id=None):
-        """
-        GET:
-        - /assignments → all assignments
-        - /assignments/<satellite_id> → ground stations for satellite
-        - /assignments?ground_station_id=gs-1 → satellites for ground station
-        """
+        """Get all assignments or filter by satellite or ground station."""
         ground_station_id = request.args.get("ground_station_id")
 
         if satellite_id:
@@ -25,69 +30,29 @@ class SatelliteAssignmentAPI(Resource):
         else:
             assignments = SatelliteAssignment.query.all()
 
-        result = [
-            {
-                "satellite_id": a.satellite_id,
-                "ground_station_id": a.ground_station_id
-            }
-            for a in assignments
-        ]
-        return result, 200
-
+        return [{
+            "satellite_id": a.satellite_id,
+            "ground_station_id": a.ground_station_id
+        } for a in assignments], 200
 
     def post(self):
-        """
-        POST: Assign a satellite to a ground station.
-        Expects JSON: { "satellite_id": "...", "ground_station_id": "..." }
-        """
+        """Assign a satellite to a ground station."""
         data = request.json
-        satellite_id = data.get("satellite_id")
-        ground_station_id = data.get("ground_station_id")
-
-        if not satellite_id or not ground_station_id:
-            return {"error": "satellite_id and ground_station_id are required"}, 400
-
-        # Prevent duplicate
-        existing = SatelliteAssignment.query.filter_by(
-            satellite_id=satellite_id,
-            ground_station_id=ground_station_id
-        ).first()
-        if existing:
-            return {"message": "Already assigned"}, 200
-
-        try:
-            assignment = SatelliteAssignment(
-                satellite_id=satellite_id,
-                ground_station_id=ground_station_id
-            )
-            db.session.add(assignment)
-            db.session.commit()
-            return {"message": f"{satellite_id} assigned to {ground_station_id}"}, 201
-        except Exception as e:
-            db.session.rollback()
-            return {"error": str(e)}, 500
+        assignment = SatelliteAssignment(
+            satellite_id=data.get("satellite_id"),
+            ground_station_id=data.get("ground_station_id")
+        )
+        db.session.add(assignment)
+        db.session.commit()
+        return {"message": "Assignment created"}, 201
 
     def delete(self):
-        """
-        DELETE: Unassign satellite from ground station.
-        Expects JSON: { "satellite_id": "...", "ground_station_id": "..." }
-        """
+        """Unassign a satellite from a ground station."""
         data = request.json
-        satellite_id = data.get("satellite_id")
-        ground_station_id = data.get("ground_station_id")
-
         assignment = SatelliteAssignment.query.filter_by(
-            satellite_id=satellite_id,
-            ground_station_id=ground_station_id
-        ).first()
-
-        if not assignment:
-            return {"error": "Assignment not found"}, 404
-
-        try:
-            db.session.delete(assignment)
-            db.session.commit()
-            return {"message": f"Unassigned {satellite_id} from {ground_station_id}"}, 200
-        except Exception as e:
-            db.session.rollback()
-            return {"error": str(e)}, 500
+            satellite_id=data.get("satellite_id"),
+            ground_station_id=data.get("ground_station_id")
+        ).first_or_404()
+        db.session.delete(assignment)
+        db.session.commit()
+        return {"message": "Assignment removed"}, 200

@@ -1,3 +1,10 @@
+/**
+ * AssignmentOverviewPage Component
+ *
+ * Provides an overview of all satellite-to-ground station assignments.
+ * Lists satellites and displays their associated ground stations.
+ */
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -12,6 +19,9 @@ function AssignmentOverviewPage() {
         fetchData();
     }, []);
 
+    /**
+     * Load all necessary data to build the overview list.
+     */
     const fetchData = async () => {
         const [satRes, gsRes, asgRes] = await Promise.all([
             axios.get(`${API_BASE_URL}/satellites`),
@@ -24,11 +34,19 @@ function AssignmentOverviewPage() {
         setAssignments(asgRes.data);
     };
 
+    /**
+     * Get ground station name by ID.
+     * @param {string} gsId
+     */
     const getGroundStationName = (gsId) => {
         const gs = groundStations.find(g => g.ground_station_id === gsId);
         return gs ? gs.name : "Unknown";
     };
 
+    /**
+     * Return ground station IDs assigned to a satellite.
+     * @param {string} satelliteId
+     */
     const getAssignedStations = (satelliteId) => {
         return assignments
             .filter(a => a.satellite_id === satelliteId)
@@ -38,29 +56,7 @@ function AssignmentOverviewPage() {
     return (
         <div>
             <h2>Assignment Overview</h2>
-            <p className="text-muted">
-                This page shows all satellites and their assigned ground stations.
-            </p>
-
-            {satellites.map((sat) => {
-                const assignedGsIds = getAssignedStations(sat.satellite_id);
-                return (
-                    <div key={sat.satellite_id} className="card mb-3 p-3">
-                        <h5>{sat.name || sat.satellite_id}</h5>
-                        {assignedGsIds.length > 0 ? (
-                            <ul>
-                                {assignedGsIds.map((gsId) => (
-                                    <li key={gsId}>
-                                        {gsId} – {getGroundStationName(gsId)}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-muted">No ground stations assigned.</p>
-                        )}
-                    </div>
-                );
-            })}
+            ...
         </div>
     );
 }

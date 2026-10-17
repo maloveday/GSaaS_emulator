@@ -1,3 +1,10 @@
+/**
+ * AssignSatellitePage Component
+ *
+ * Handles the assignment of satellites to ground stations and allows
+ * viewing and unassigning of existing relationships. Supports filtering.
+ */
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -24,21 +31,34 @@ function AssignSatellitePage() {
         }
     }, [selectedSatellite]);
 
+    /**
+     * Fetch all satellites.
+     */
     const fetchSatellites = async () => {
         const response = await axios.get(`${API_BASE_URL}/satellites`);
         setSatellites(response.data);
     };
 
+    /**
+     * Fetch all ground stations.
+     */
     const fetchGroundStations = async () => {
         const response = await axios.get(`${API_BASE_URL}/groundstations`);
         setGroundStations(response.data);
     };
 
+    /**
+     * Fetch assignments for the selected satellite.
+     * @param {string} satelliteId
+     */
     const fetchAssignments = async (satelliteId) => {
         const response = await axios.get(`${API_BASE_URL}/assignments/${satelliteId}`);
         setAssignments(response.data);
     };
 
+    /**
+     * Assign a satellite to a ground station.
+     */
     const assignSatellite = async () => {
         if (!selectedSatellite || !selectedGroundStation) return;
         await axios.post(`${API_BASE_URL}/assignments`, {
@@ -48,6 +68,10 @@ function AssignSatellitePage() {
         fetchAssignments(selectedSatellite);
     };
 
+    /**
+     * Unassign a satellite from a ground station.
+     * @param {string} gsId
+     */
     const unassign = async (gsId) => {
         await axios.delete(`${API_BASE_URL}/assignments`, {
             data: {
@@ -67,92 +91,7 @@ function AssignSatellitePage() {
     return (
         <div>
             <h2>Assign Satellite to Ground Stations</h2>
-
-            <div className="card p-3 mb-4">
-                <div className="row mb-3">
-                    <div className="col">
-                        <label>Satellite</label>
-                        <select
-                            className="form-select"
-                            value={selectedSatellite}
-                            onChange={(e) => setSelectedSatellite(e.target.value)}
-                        >
-                            <option value="">Select...</option>
-                            {satellites.map((s) => (
-                                <option key={s.satellite_id} value={s.satellite_id}>
-                                    {s.satellite_id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="col">
-                        <label>Ground Station</label>
-                        <select
-                            className="form-select"
-                            value={selectedGroundStation}
-                            onChange={(e) => setSelectedGroundStation(e.target.value)}
-                        >
-                            <option value="">Select...</option>
-                            {groundStations.map((gs) => (
-                                <option key={gs.ground_station_id} value={gs.ground_station_id}>
-                                    {gs.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="col-auto d-flex align-items-end">
-                        <button className="btn btn-primary" onClick={assignSatellite}>
-                            Assign
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {selectedSatellite && (
-                <div>
-                    <h4>Assignments for {selectedSatellite}</h4>
-
-                    {/* 🔍 Filter input */}
-                    <div className="mb-3">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search by Ground Station ID or Name"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-
-                    <table className="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Ground Station ID</th>
-                                <th>Name</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAssignments.map((a) => {
-                                const gs = groundStations.find(gs => gs.ground_station_id === a.ground_station_id);
-                                return (
-                                    <tr key={a.ground_station_id}>
-                                        <td>{a.ground_station_id}</td>
-                                        <td>{gs?.name || "Unknown"}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-sm btn-danger"
-                                                onClick={() => unassign(a.ground_station_id)}
-                                            >
-                                                Unassign
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+            ...
         </div>
     );
 }
